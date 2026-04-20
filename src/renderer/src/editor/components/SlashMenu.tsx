@@ -113,6 +113,12 @@ export default function SlashMenu({ editor, position, onClose }: SlashMenuProps)
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const activeItemRef = useRef<HTMLButtonElement>(null)
+
+  // 방향키로 activeIndex 변경 시 해당 항목이 뷰포트 안에 들어오도록 스크롤
+  useEffect(() => {
+    activeItemRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [activeIndex])
 
   const filtered = COMMANDS.filter(
     (c) =>
@@ -194,6 +200,7 @@ export default function SlashMenu({ editor, position, onClose }: SlashMenuProps)
             return (
               <button
                 key={cmd.id}
+                ref={idx === activeIndex ? activeItemRef : null}
                 onMouseDown={(e) => { e.preventDefault(); applyCommand(cmd) }}
                 onMouseEnter={() => setActiveIndex(idx)}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-left ${

@@ -6,7 +6,7 @@ import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
 import Highlight from '@tiptap/extension-highlight'
 import CharacterCount from '@tiptap/extension-character-count'
-import { AlignCenter, Focus, Maximize2, Type } from 'lucide-react'
+import { Focus, Maximize2, Type } from 'lucide-react'
 
 import { useEditorStore } from '../store/editorStore'
 import { markdownModeRef, MarkdownModePlugin } from './extensions/MarkdownModePlugin'
@@ -61,9 +61,9 @@ export default function Editor(): React.JSX.Element {
     ],
     autofocus: true,
     onUpdate({ editor: e }) {
-      // CharacterCount storage에서 단어 수 추출
-      const words = (e.storage.characterCount as { words?: () => number })?.words?.() ?? 0
-      setWordCount(words)
+      // 공백(스페이스·탭)과 줄바꿈을 제외한 순수 글자 수만 집계
+      const raw = e.state.doc.textContent
+      setWordCount(raw.replace(/\s/g, '').length)
     },
   })
 
