@@ -10,7 +10,7 @@ import {
   ListOrdered,
   Code,
   Quote,
-  AlignCenter,
+  AlignLeft,
   Minus,
 } from 'lucide-react'
 
@@ -43,6 +43,20 @@ const COMMANDS: Command[] = [
     description: '작은 제목',
     icon: Heading3,
     action: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(),
+  },
+  {
+    id: 'align',
+    label: '왼쪽/가운데 정렬',
+    description: '텍스트 정렬 전환',
+    icon: AlignLeft,
+    action: (e) => {
+      const isCenter = e.isActive({ textAlign: 'center' })
+      if (isCenter) {
+        e.chain().focus().setTextAlign('left').run()
+      } else {
+        e.chain().focus().setTextAlign('center').run()
+      }
+    },
   },
   {
     id: 'bold',
@@ -87,13 +101,6 @@ const COMMANDS: Command[] = [
     action: (e) => e.chain().focus().toggleBlockquote().run(),
   },
   {
-    id: 'center',
-    label: 'Center Align',
-    description: '가운데 정렬',
-    icon: AlignCenter,
-    action: (e) => e.chain().focus().setTextAlign('center').run(),
-  },
-  {
     id: 'divider',
     label: 'Divider',
     description: '구분선',
@@ -115,7 +122,6 @@ export default function SlashMenu({ editor, position, onClose }: SlashMenuProps)
   const menuRef = useRef<HTMLDivElement>(null)
   const activeItemRef = useRef<HTMLButtonElement>(null)
 
-  // 방향키로 activeIndex 변경 시 해당 항목이 뷰포트 안에 들어오도록 스크롤
   useEffect(() => {
     activeItemRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [activeIndex])
@@ -126,12 +132,10 @@ export default function SlashMenu({ editor, position, onClose }: SlashMenuProps)
       c.description.includes(query)
   )
 
-  // 열리면 입력 포커스
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
 
-  // 외부 클릭 시 닫기
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -151,11 +155,11 @@ export default function SlashMenu({ editor, position, onClose }: SlashMenuProps)
     if (e.key === 'Escape') { onClose(); return }
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setActiveIndex((i) => Math.min(i + 1, filtered.length - 1))
+      setActiveIndex((i) => (i + 1) % filtered.length)
     }
     if (e.key === 'ArrowUp') {
       e.preventDefault()
-      setActiveIndex((i) => Math.max(i - 1, 0))
+      setActiveIndex((i) => (i - 1 + filtered.length) % filtered.length)
     }
     if (e.key === 'Enter') {
       e.preventDefault()
@@ -163,10 +167,8 @@ export default function SlashMenu({ editor, position, onClose }: SlashMenuProps)
     }
   }
 
-  // 필터 결과 바뀌면 activeIndex 초기화
   useEffect(() => setActiveIndex(0), [query])
 
-  // 창 밖으로 넘어가지 않도록 위치 보정
   const maxTop = window.innerHeight - 380
   const adjustedTop = Math.min(position.top, maxTop)
   const maxLeft = window.innerWidth - 260
@@ -176,7 +178,7 @@ export default function SlashMenu({ editor, position, onClose }: SlashMenuProps)
     <div
       ref={menuRef}
       style={{ top: adjustedTop, left: adjustedLeft }}
-      className="fixed z-50 w-[240px] rounded-xl bg-[#1e1e21] border border-white/[0.08] shadow-2xl shadow-black/60 overflow-hidden"
+      className="fixed z-50 w-[240px] rounded-xl bg-white border border-black/[0.08] shadow-xl shadow-black/10 overflow-hidden"
     >
       {/* 검색 입력 */}
       <div className="px-3 pt-3 pb-2">
@@ -186,14 +188,14 @@ export default function SlashMenu({ editor, position, onClose }: SlashMenuProps)
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="서식 검색..."
-          className="w-full bg-white/[0.05] rounded-lg px-2.5 py-1.5 text-[12px] text-[#c0c0c5] placeholder-[#4a4a4e] outline-none border border-white/[0.06]"
+          className="w-full bg-black/[0.04] rounded-lg px-2.5 py-1.5 text-[12px] text-[#4a4a4e] placeholder-[#c0c0b8] outline-none border border-black/[0.06]"
         />
       </div>
 
       {/* 명령 목록 */}
       <div className="max-h-[300px] overflow-y-auto px-1.5 pb-2">
         {filtered.length === 0 ? (
-          <p className="text-[11px] text-[#4a4a4e] text-center py-4">결과 없음</p>
+          <p className="text-[11px] text-[#c0c0b8] text-center py-4">결과 없음</p>
         ) : (
           filtered.map((cmd, idx) => {
             const Icon = cmd.icon
@@ -205,14 +207,14 @@ export default function SlashMenu({ editor, position, onClose }: SlashMenuProps)
                 onMouseEnter={() => setActiveIndex(idx)}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-colors text-left ${
                   idx === activeIndex
-                    ? 'bg-[#5b8af5]/[0.15] text-white'
-                    : 'text-[#a0a0a8] hover:bg-white/[0.05]'
+                    ? 'bg-[#3B7BF5]/[0.10] text-[#2c2c2e]'
+                    : 'text-[#6a6a70] hover:bg-black/[0.04]'
                 }`}
               >
-                <Icon size={14} className="shrink-0 opacity-80" />
+                <Icon size={14} className="shrink-0 opacity-70" />
                 <div>
                   <div className="text-[12px] font-medium leading-tight">{cmd.label}</div>
-                  <div className="text-[10px] text-[#5a5a60] leading-tight">{cmd.description}</div>
+                  <div className="text-[10px] text-[#aaaaA0] leading-tight">{cmd.description}</div>
                 </div>
               </button>
             )

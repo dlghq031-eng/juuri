@@ -1,7 +1,10 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
+import { registerFileSystemHandlers } from './ipc/fileSystemHandler'
 
 const isDev = process.env.NODE_ENV === 'development'
+
+app.commandLine.appendSwitch('disable-features', 'CharacterPicker')
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -12,7 +15,7 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     titleBarStyle: 'hiddenInset',
-    backgroundColor: '#111113',
+    backgroundColor: '#F5F4F0',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -37,7 +40,6 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  // F12로 DevTools 열기 (개발 중에만)
   if (isDev) {
     app.on('browser-window-created', (_, window) => {
       window.webContents.on('before-input-event', (_, input) => {
@@ -47,6 +49,7 @@ app.whenReady().then(() => {
   }
 
   ipcMain.on('ping', () => console.log('pong'))
+  registerFileSystemHandlers()
 
   createWindow()
 
